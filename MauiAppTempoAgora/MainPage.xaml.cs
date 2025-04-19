@@ -1,4 +1,7 @@
-﻿namespace MauiAppTempoAgora
+﻿using MauiAppTempoAgora.Models;
+using MauiAppTempoAgora.Services;
+
+namespace MauiAppTempoAgora
 {
     public partial class MainPage : ContentPage
     {
@@ -9,16 +12,51 @@
             InitializeComponent();
         }
 
-        private void OnCounterClicked(object sender, EventArgs e)
+        private async void Button_Clicked(object sender, EventArgs e)
         {
-            count++;
+            tryHome
+            {
+                if (!string.IsNullOrEmpty(txt_cidade.Text))
+                {
+                    Tempo? t = await DataService.GetPrevisao(txt_cidade.Text);
 
-            if (count == 1)
-                CounterBtn.Text = $"Clicked {count} time";
-            else
-                CounterBtn.Text = $"Clicked {count} times";
+                    if (t != null)
+                    {
+                        string dados_previsao = "";
 
-            SemanticScreenReader.Announce(CounterBtn.Text);
+                        dados_previsao = $"Latitude: {t.lat} \n" +
+                                         $"Longitude: {t.lon} \n" +
+                                         $"Nascer do Sol: {t.sunrise} \n" +
+                                         $"Por do Sol: {t.sunset} \n" +
+                                         $"Temperatura máxima: {t.temp_max} \n" +
+                                         $"Temperatura mínima: {t.temp_min} \n" +
+                                         $"Descrição do tempo: {t.description} \n" +
+                                         $"Velocidade do vento: {t.speed} \n" +
+                                         $"Visibilidade: {t.visibility} \n";
+
+                        lbl_result.Text = dados_previsao;
+                    }
+                    else
+                    {
+                        lbl_result.Text = "Cidade não encontrada";
+                    }
+                }
+                else
+                {
+                    lbl_result.Text = "Preencha a cidade";
+                }
+
+
+            }
+            catch (HttpRequestException httpEx)
+            {
+                await DisplayAlert("Sem conexão a internet", "Verifique sua conexão e tente novamente", "OK");
+
+            }catch (Exception ex)
+            {
+                await DisplayAlert("Ops", ex.Message, "OK");
+            }
+            
         }
     }
 
